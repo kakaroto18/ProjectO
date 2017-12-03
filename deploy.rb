@@ -229,7 +229,7 @@ class Deployer
       server_cert = 'server-cert.pem'
       server_tmpl = 'server.tmpl'
       File.open(server_tmpl, 'w+') do |f|
-        f.write "cn = \"#{@domain}\"\norganization = \"ProjectO\"\nexpiration_days = #{ 365 * @config['cert_lifespan'].to_i }\nsigning_key\nencryption_key\ntls_www_server\n"
+        f.write "cn = \"#{@domain}\"\norganization = \"ProjectO\"\nexpiration_days = #{ 365 * @config['cert_lifespan'].to_i / 2 }\nsigning_key\nencryption_key\ntls_www_server\n"
       end
       system("#{certtool} --generate-certificate --load-privkey #{server_key} --load-ca-certificate #{ca_cert} --load-ca-privkey #{ca_key} --template #{server_tmpl} --outfile #{server_cert}")
       
