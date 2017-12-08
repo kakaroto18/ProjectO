@@ -29,9 +29,11 @@ class Server
     @session = session
     @config = config
     @domain = config['domain']
-    @ip = Resolv.getaddress(@domain)
-    @enable_udp = config['enable_udp']
-    @port = config['port']
+    ip = Resolv.getaddress(@domain)
+    @ip = (config['local_ip'].nil? or config['local_ip'].strip.empty?) ? ip : config['local_ip']
+    @enable_udp = config['enable_udp'] || false
+    @port = config['port'] || 443
+    @org = config['cert_org'] || 'ProjectO'
   end
   
   def check_os
@@ -51,7 +53,7 @@ class Server
     udp_config = @enable_udp ? "udp-port = #{@port}" : ""
     oc_config =<<END
 auth = "certificate"
-listen-host = #{@domain}
+listen-host = #{@ip}
 tcp-port = #{@port}
 #{udp_config}
 run-as-user = nobody
@@ -69,6 +71,7 @@ dpd = 90
 mobile-dpd = 1800
 switch-to-tcp-timeout = 25
 try-mtu-discovery = true
+mtu = 1360
 cert-user-oid = 2.5.4.3
 tls-priorities = "NORMAL:%SERVER_PRECEDENCE:%COMPAT:-VERS-SSL3.0"
 auth-timeout = 240
@@ -215,7 +218,7 @@ class Deployer
       unless File.exists?(ca_cert)
         ca_tmpl = 'ca.tmpl'
         File.open(ca_tmpl, 'w+') do |f|
-          f.write "cn = \"ProjectO\"\norganization = \"ProjectO\"\nserial = 1\nexpiration_days = #{ 365 * @config['cert_lifespan'].to_i }\nca\nsigning_key\ncert_signing_key\ncrl_signing_key\n"
+          f.write "cn = \"#{@org}\"\norganization = \"#{@org}\"\nserial = 1\nexpiration_days = #{ 365 * @config['cert_lifespan'].to_i }\nca\nsigning_key\ncert_signing_key\ncrl_signing_key\n"
         end
         system("#{certtool} --generate-self-signed --load-privkey #{ca_key} --template #{ca_tmpl} --outfile #{ca_cert}")
       end
@@ -229,7 +232,7 @@ class Deployer
       server_cert = 'server-cert.pem'
       server_tmpl = 'server.tmpl'
       File.open(server_tmpl, 'w+') do |f|
-        f.write "cn = \"#{@domain}\"\norganization = \"ProjectO\"\nexpiration_days = #{ 365 * @config['cert_lifespan'].to_i / 2 }\nsigning_key\nencryption_key\ntls_www_server\n"
+        f.write "cn = \"#{@domain}\"\norganization = \"#{@org}\"\nexpiration_days = #{ 365 * @config['cert_lifespan'].to_i }\nsigning_key\nencryption_key\ntls_www_server\n"
       end
       system("#{certtool} --generate-certificate --load-privkey #{server_key} --load-ca-certificate #{ca_cert} --load-ca-privkey #{ca_key} --template #{server_tmpl} --outfile #{server_cert}")
       
@@ -242,10 +245,10 @@ class Deployer
       unless File.exists?(user_cert)
         user_tmpl = 'user.tmpl'
         File.open(user_tmpl, 'w+') do |f|
-          f.write "cn = \"ProjectO\"\norganization = \"ProjectO\"\nexpiration_days = #{ 365 * @config['user_cert_lifespan'].to_i }\nsigning_key\ntls_www_client\n"
+          f.write "cn = \"#{@org}\"\norganization = \"#{@org}\"\nexpiration_days = #{ 365 * @config['user_cert_lifespan'].to_i }\nsigning_key\ntls_www_client\n"
         end
         system("#{certtool} --generate-certificate --load-privkey #{user_key} --load-ca-certificate #{ca_cert} --load-ca-privkey #{ca_key} --template #{user_tmpl} --outfile #{user_cert}")
-        system("#{certtool} --to-p12 --load-privkey #{user_key} --pkcs-cipher 3des-pkcs12 --load-certificate #{user_cert} --p12-name ProjectO --password #{@config['user_cert_password']} --outfile user.p12 --outder")
+        system("#{certtool} --to-p12 --load-privkey #{user_key} --pkcs-cipher 3des-pkcs12 --load-certificate #{user_cert} --p12-name #{@org} --password #{@config['user_cert_password']} --outfile user.p12 --outder")
       end
     end
   end

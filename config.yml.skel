@@ -1,7 +1,10 @@
 ---
 domain: 'example.com'
+local_ip: '' # necessary for aws, left empty string if vps have only public ip.
 port: 443
 enable_udp: false
+cert_org: 'ProjectO'
 cert_lifespan: 10 #years
 user_cert_lifespan: 10 #years
-user_cert_password: 's0m3_rea11y_s39ur3_pwd'
+user_cert_password: 'p12_password'
+
