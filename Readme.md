@@ -30,6 +30,10 @@ cp config.yml.skel config.yml
 ruby deploy.rb
 ```
 
+## Client app
+
+Version 4.5 of Cisco AnyConnect app (Windows, Linux, macOS) is included in `clients` directory. 
+
 ## About certificate
 
 **Do not delete certificates in certs directory.**
