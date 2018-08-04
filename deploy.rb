@@ -6,6 +6,7 @@ require 'resolv'
 require 'fileutils'
 require 'yaml'
 require 'sinatra'
+require 'os'
 
 include FileUtils
 include SSHKit::DSL
@@ -117,8 +118,9 @@ END
   
   def common_setup
     @session.execute('apt-get update')
+    @session.execute('apt-get upgrade')
     @session.execute('apt-get -y install gdebi-core')
-    @session.execute('apt-get -y install linux-image-4.13.0-17-generic') unless bbr_compatible?
+    @session.execute('apt-get -y install linux-image-4.15.0-29-generic') unless bbr_compatible?
   end
   
   def setup_sysctl
@@ -202,10 +204,11 @@ class Deployer
     raise 'config.yml does not exists.' unless File.exists?(path)
     @config = YAML.load(File.open(path).read)
     @domain = @config['domain']
+    @org = @config['cert_org'] || 'ProjectO'
   end
   
   def generate_certs
-    certtool = `which certtool`.strip
+    certtool = OS.mac? ? `which gnutls-certtool`.strip : `which certtool`.strip
     raise 'You need gnutls to create certificates.\nPlease install gnutls or gnutls-bin via your favorite package manager.' if certtool == ""
     
     cd CERTS_DIR do
@@ -252,8 +255,26 @@ class Deployer
       end
     end
   end
+
+  def os_check
+    if OS.mac?
+      if `which gnutls-certtool`.empty?
+        puts "Please run `brew install gnutls` first."
+        exit(1)
+      end
+    elsif OS.linux? or OS.cygwin?
+      if `which certtool`.empty?
+        puts "Please install `gnutls-bin` or `gnutls-cli` first."
+        exit(1)
+      end
+    else
+      puts "Your OS is not supported."
+      exit(1)
+    end
+  end
   
   def run
+    os_check
     generate_certs
     config = @config
     on "root@#{@domain}" do

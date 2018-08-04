@@ -10,9 +10,13 @@
 1. Install Ruby and gems (Ruby 2.3+ recommended)
 
 ```
-# For example, on Ubuntu 16.04, you can run:
+# If you use Ubuntu 16.04, you can run:
 sudo apt-get install ruby gnutls-bin
-sudo gem install sshkit sinatra
+sudo gem install sshkit sinatra os
+
+# If you use macOS, you can run:
+brew install gnutls
+(sudo) gem install sshkit sinatra os
 ```
 
 2. Checkout this project and prepare `config.yml`
@@ -32,7 +36,8 @@ ruby deploy.rb
 
 ## Client app
 
-Version 4.5 of Cisco AnyConnect app (Windows, Linux, macOS) is included in `clients` directory. 
+- Version 4.5 of Cisco AnyConnect app. Client for Windows, Linux, macOS is included in `clients` directory. iOS and Android users please use App Store and Play Store.
+- [OpenConnect GUI](https://github.com/openconnect/openconnect-gui) is anther good choice. OpenConnect GUI is available for Windows (included in `clients` directory) and Android.
 
 ## About certificate
 

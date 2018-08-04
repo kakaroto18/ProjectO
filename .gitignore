@@ -1,0 +1,4 @@
+config.yml
+certs/*.pem
+certs/*.tmpl
+certs/*.p12
