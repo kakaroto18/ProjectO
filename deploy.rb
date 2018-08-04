@@ -118,7 +118,7 @@ END
   
   def common_setup
     @session.execute('apt-get update')
-    @session.execute('apt-get upgrade')
+    @session.execute('DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y upgrade')
     @session.execute('apt-get -y install gdebi-core')
     @session.execute('apt-get -y install linux-image-4.15.0-29-generic') unless bbr_compatible?
   end
