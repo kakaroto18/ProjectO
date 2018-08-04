@@ -31,6 +31,7 @@ class Server
     @config = config
     @domain = config['domain']
     ip = Resolv.getaddress(@domain)
+    @pub_ip = ip
     @ip = (config['local_ip'].nil? or config['local_ip'].strip.empty?) ? ip : config['local_ip']
     @enable_udp = config['enable_udp'] || false
     @port = config['port'] || 443
@@ -54,7 +55,7 @@ class Server
     udp_config = @enable_udp ? "udp-port = #{@port}" : ""
     oc_config =<<END
 auth = "certificate"
-listen-host = #{@ip}
+listen-host = #{@pub_ip}
 tcp-port = #{@port}
 #{udp_config}
 run-as-user = nobody
